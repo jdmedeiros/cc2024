@@ -87,6 +87,8 @@ function calculateBackgroundColor() {
             <?php endforeach; ?>
         </ul>
     </div>
-
+    <footer>
+        &copy; 2024 WorldSkills Portugal. All rights reserved.
+    </footer>
 </body>
 </html>
