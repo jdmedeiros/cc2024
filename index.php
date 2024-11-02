@@ -48,13 +48,8 @@ $isHttps = !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on';
 $isHttps |= !empty($_SERVER['REQUEST_SCHEME']) && $_SERVER['REQUEST_SCHEME'] === 'https';
 
 if ($isHttps) {
-    if (!empty($_SERVER['SSL_PROTOCOL'])) {
-        $httpsStatus = 'This site is running on HTTPS with a valid certificate.';
-        $welcomeClass = 'welcome-secure';
-    } else {
-        $httpsStatus = 'This site is running on HTTPS, but the certificate is not valid.';
-        $welcomeClass = 'welcome-insecure';
-    }
+    $httpsStatus = 'This site is running on HTTPS.';
+    $welcomeClass = 'welcome-secure';
 } else {
     $httpsStatus = 'This site is running on HTTP.';
     $welcomeClass = 'welcome-insecure';
@@ -73,6 +68,7 @@ function calculateBackgroundColor() {
     return "rgb($r, $g, $b)";
 }
 ?>
+
 
     <h1 class="welcome <?php echo $welcomeClass; ?>">Welcome to <?php echo htmlspecialchars($_SERVER['HTTP_HOST']); ?> !</h1>
     <p class="https-status <?php echo $welcomeClass; ?>"><?php echo $httpsStatus; ?></p>
