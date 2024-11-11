@@ -1,0 +1,39 @@
+#!/bin/bash
+
+# List all S3 buckets
+BUCKETS=$(aws s3api list-buckets --query "Buckets[].Name" --output text)
+
+echo "Listing all S3 buckets:"
+echo "$BUCKETS"
+
+# Loop through each bucket
+for BUCKET in $BUCKETS; do
+    echo -e "\nBucket: $BUCKET"
+
+    # Ask if the user wants to upload a file to the bucket
+    read -p "Would you like to upload a file to $BUCKET? (y/n): " RESPONSE
+
+    if [[ "$RESPONSE" == "y" ]]; then
+        # Generate a temporary file with date and time in its name
+        TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
+        TEMP_FILE="temp_file_$TIMESTAMP.txt"
+
+        # Write some content to the file
+        echo "This is a temporary file created on $TIMESTAMP" > "$TEMP_FILE"
+
+        # Upload the file to the bucket
+        aws s3 cp "$TEMP_FILE" "s3://$BUCKET/"
+
+        # Confirm upload
+        if [ $? -eq 0 ]; then
+            echo "File $TEMP_FILE uploaded to $BUCKET successfully."
+        else
+            echo "Failed to upload file $TEMP_FILE to $BUCKET."
+        fi
+
+        # Remove the temporary file
+        rm "$TEMP_FILE"
+    else
+        echo "Skipping upload for $BUCKET."
+    fi
+done

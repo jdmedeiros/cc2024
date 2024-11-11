@@ -4,6 +4,3 @@
 
 ./ASGB
 read -rsn1 -p"Ready? - press any key to continue";echo;echo
-
-./ASGC
-read -rsn1 -p"Ready? - press any key to continue";echo;echo
