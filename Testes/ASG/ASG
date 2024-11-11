@@ -1,7 +1,6 @@
 #!/bin/bash
 
 ./ASGA
-read -rsn1 -p"Ready? - press any key to continue";echo;echo
 
 ./ASGB
 read -rsn1 -p"Ready? - press any key to continue";echo;echo
