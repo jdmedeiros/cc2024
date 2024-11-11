@@ -1,10 +1,10 @@
 #!/bin/bash
 
 ./A1A
-read -rsn1 -p"Ready? - press any key to continue";echo
+read -rsn1 -p"Ready? - press any key to continue";echo;echo
 
 ./A1B
-read -rsn1 -p"Ready? - press any key to continue";echo
+read -rsn1 -p"Ready? - press any key to continue";echo;echo
 
 ./A1C
-read -rsn1 -p"Ready? - press any key to continue";echo
+read -rsn1 -p"Ready? - press any key to continue";echo;echo
