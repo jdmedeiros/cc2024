@@ -33,15 +33,12 @@ for SUBNET in $(echo "$SUBNETS" | jq -c '.[]'); do
     echo "Availability Zone: $AZ"
 
     # Get route table associated with the subnet
-    ROUTE_TABLES=$(aws ec2 describe-route-tables --region $REGION --filters "Name=association.subnet-id,Values=$SUBNET_ID" --query "RouteTables[*].{ID:RouteTableId, Routes:Routes}" --output json)
+    ROUTE_TABLES=$(aws ec2 describe-route-tables --region $REGION --filters "Name=association.subnet-id,Values=$SUBNET_ID" --query "RouteTables[*].RouteTableId" --output text)
 
-    # Loop through each route table and print the routes
-    for ROUTE_TABLE in $(echo "$ROUTE_TABLES" | jq -c '.[]'); do
-        ROUTE_TABLE_ID=$(echo "$ROUTE_TABLE" | jq -r '.ID')
-        echo "  Route Table ID: $ROUTE_TABLE_ID"
-
-        echo "  Routes:"
-        echo "$ROUTE_TABLE" | jq -r '.Routes[] | "    Destination: \(.DestinationCidrBlock // .DestinationPrefixListId), Target: \(.GatewayId // .NatGatewayId // .TransitGatewayId // .InstanceId // .NetworkInterfaceId // "local")"'
+    # List associated route tables
+    echo "  Associated Route Table(s):"
+    for ROUTE_TABLE_ID in $ROUTE_TABLES; do
+        echo "    - $ROUTE_TABLE_ID"
     done
     echo "-----------------------"
 done
