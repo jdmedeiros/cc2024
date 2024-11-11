@@ -25,7 +25,7 @@ else
 fi
 
 # Check the number of unique Availability Zones in the VPC
-AZ_COUNT=$(aws ec2 describe-subnets --region $REGION --filters "Name=vpc-id,Values=$VPC_ID" --query "length(unique(Subnets[].AvailabilityZone))" --output text)
+AZ_COUNT=$(aws ec2 describe-subnets --region $REGION --filters "Name=vpc-id,Values=$VPC_ID" --query "Subnets[].AvailabilityZone" --output text | tr '\t' '\n' | sort -u | wc -l)
 
 echo "Number of Availability Zones: $AZ_COUNT"
 
