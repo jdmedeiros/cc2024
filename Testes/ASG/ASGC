@@ -1,0 +1,28 @@
+#!/bin/bash
+
+REGION="us-east-1"  # Specify the region if necessary
+
+# Step 1: List ASGs with Load Balancers and Target Groups
+echo "Auto Scaling Groups with Load Balancers and Target Groups:"
+aws autoscaling describe-auto-scaling-groups --region $REGION --query "AutoScalingGroups[*].{ASGName:AutoScalingGroupName, LoadBalancers:LoadBalancerNames, TargetGroups:TargetGroupARNs}" --output table
+
+# Step 2: Detailed Load Balancer Information
+echo -e "\nDetailed Load Balancer Information:\n"
+
+# Fetch ASGs and associated Load Balancers
+ASG_LBS=$(aws autoscaling describe-auto-scaling-groups --region $REGION --query "AutoScalingGroups[*].{ASGName:AutoScalingGroupName, LoadBalancers:LoadBalancerNames}" --output json)
+
+# Loop through each ASG to get Load Balancer details
+echo "$ASG_LBS" | jq -c '.[]' | while read ASG; do
+    ASG_NAME=$(echo "$ASG" | jq -r '.ASGName')
+    LOAD_BALANCERS=$(echo "$ASG" | jq -r '.LoadBalancers[]?')
+
+    echo -e "\nASG Name: $ASG_NAME"
+
+    for LB_NAME in $LOAD_BALANCERS; do
+        echo -e "  Load Balancer: $LB_NAME"
+
+        # Describe the Load Balancer
+        aws elb describe-load-balancers --region $REGION --load-balancer-names "$LB_NAME" --query "LoadBalancerDescriptions[*].{Name:LoadBalancerName, DNSName:DNSName, Scheme:Scheme, Instances:Instances[*].InstanceId}" --output table
+    done
+done
