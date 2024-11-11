@@ -12,8 +12,7 @@ for url in "${URLS[@]}"; do
 
     # Check for "PHP Version" in the output, which indicates PHP processing
     response=$(curl -sk $url)
-    echo "$response"
-    if echo "$response" | grep -q PHP Version; then
+    if echo "$response" | grep -q "PHP Version"; then
         echo "PHP is installed and responding on $url"
     else
         echo "PHP is not responding as expected on $url"
