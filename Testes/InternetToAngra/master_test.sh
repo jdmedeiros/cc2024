@@ -19,4 +19,4 @@ read -rsn1 -p"Ready? - press any key to continue";echo;echo
 
 ./php_test.sh
 
-read -rsn1 -p"Ready? - press any key to continue";echo
+read -rsn1 -p"Ready? - press any key to continue";echo;echo
