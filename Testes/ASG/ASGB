@@ -1,0 +1,41 @@
+#!/bin/bash
+
+# Variables
+ASG_NAME="asg"  # Auto Scaling Group name
+REGION="us-east-1"  # AWS region
+
+echo "Auto Scaling Group: $ASG_NAME"
+
+# Get the default cooldown for the ASG
+DEFAULT_COOLDOWN=$(aws autoscaling describe-auto-scaling-groups --region $REGION --auto-scaling-group-names $ASG_NAME --query "AutoScalingGroups[0].DefaultCooldown" --output text)
+echo "Default Cooldown: $DEFAULT_COOLDOWN seconds"
+
+# Check if the ASG uses a launch template
+LAUNCH_TEMPLATE=$(aws autoscaling describe-auto-scaling-groups --region $REGION --auto-scaling-group-names $ASG_NAME --query "AutoScalingGroups[0].LaunchTemplate" --output json)
+
+if [ "$LAUNCH_TEMPLATE" == "null" ]; then
+    echo "No launch template found for Auto Scaling Group $ASG_NAME."
+else
+    # Extract Launch Template ID and Version
+    TEMPLATE_ID=$(echo "$LAUNCH_TEMPLATE" | jq -r '.LaunchTemplateId')
+    TEMPLATE_VERSION=$(echo "$LAUNCH_TEMPLATE" | jq -r '.Version')
+
+    # Get detailed monitoring setting from the launch template
+    DETAILED_MONITORING=$(aws ec2 describe-launch-template-versions --region $REGION --launch-template-id $TEMPLATE_ID --versions $TEMPLATE_VERSION --query "LaunchTemplateVersions[0].LaunchTemplateData.Monitoring.Enabled" --output text)
+
+    if [ "$DETAILED_MONITORING" == "True" ]; then
+        echo "Detailed monitoring is enabled in the launch template."
+    else
+        echo "Detailed monitoring is not enabled in the launch template."
+    fi
+fi
+
+# Get scaling policies for the specified ASG
+SCALING_POLICIES=$(aws autoscaling describe-policies --region $REGION --auto-scaling-group-name $ASG_NAME --query "ScalingPolicies" --output json)
+
+# Check if there are any policies associated
+if [ "$SCALING_POLICIES" == "[]" ]; then
+    echo "  No scaling policies found for $ASG_NAME."
+else
+    echo "$SCALING_POLICIES" | jq -r '.[] | "\n  Policy Name: \(.PolicyName)\n  Policy Type: \(.PolicyType)\n  Adjustment Type: \(.AdjustmentType // "None")\n  Scaling Adjustment: \(.ScalingAdjustment // "None")\n  Min Adjustment Magnitude: \(.MinAdjustmentMagnitude // "None")\n  Cooldown: \(.Cooldown // "Uses Default Cooldown")\n  Metric Aggregation Type: \(.MetricAggregationType // "None")\n  Estimated Instance Warmup: \(.EstimatedInstanceWarmup // "None")\n" + (if .PolicyType == "StepScaling" then "\n  Step Adjustments:" + (.StepAdjustments | map("\n    - Metric Interval Lower Bound: \(.MetricIntervalLowerBound // "None")\n      Metric Interval Upper Bound: \(.MetricIntervalUpperBound // "None")\n      Scaling Adjustment: \(.ScalingAdjustment)") | join("")) else "" end)'
+fi

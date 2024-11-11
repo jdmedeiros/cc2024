@@ -1,0 +1,9 @@
+
+#!/bin/bash
+
+aws autoscaling describe-auto-scaling-groups --query "AutoScalingGroups[*].{Name:AutoScalingGroupName, MinSize:MinSize, MaxSize:MaxSize, DesiredCapacity:DesiredCapacity}" --output table
+read -rsn1 -p"Ready? - press any key to continue";echo;echo
+
+aws autoscaling describe-auto-scaling-groups --query "AutoScalingGroups[*].{ASGName:AutoScalingGroupName, LoadBalancers:LoadBalancerNames, TargetGroups:TargetGroupARNs}" --output table
+read -rsn1 -p"Ready? - press any key to continue";echo;echo
+
