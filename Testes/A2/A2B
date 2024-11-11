@@ -1,0 +1,20 @@
+#!/bin/bash
+
+# Variables
+VPC_NAME="web-vpc"
+VPC_CIDR="10.0.16.0/20"
+REGION="us-east-1"
+
+# Fetch VPC ID based on Name and CIDR
+VPC_ID=$(aws ec2 describe-vpcs --region $REGION --filters "Name=tag:Name,Values=$VPC_NAME" "Name=cidr,Values=$VPC_CIDR" --query "Vpcs[0].VpcId" --output text)
+
+if [ "$VPC_ID" == "None" ] || [ -z "$VPC_ID" ]; then
+    echo "VPC with name $VPC_NAME and CIDR $VPC_CIDR not found in region $REGION."
+    exit 1
+fi
+
+echo "VPC $VPC_NAME found with ID $VPC_ID."
+echo "Enumerating subnets for VPC $VPC_NAME..."
+
+# List subnets in the VPC
+aws ec2 describe-subnets --region $REGION --filters "Name=vpc-id,Values=$VPC_ID" --query "Subnets[*].{ID:SubnetId, CIDR:CidrBlock, AZ:AvailabilityZone}" --output table

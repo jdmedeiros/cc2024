@@ -1,0 +1,47 @@
+#!/bin/bash
+
+# Variables
+VPC_NAME="web-vpc"
+VPC_CIDR="10.0.16.0/20"
+REGION="us-east-1"
+
+# Fetch VPC ID based on Name and CIDR
+VPC_ID=$(aws ec2 describe-vpcs --region $REGION --filters "Name=tag:Name,Values=$VPC_NAME" "Name=cidr,Values=$VPC_CIDR" --query "Vpcs[0].VpcId" --output text)
+
+if [ "$VPC_ID" == "None" ] || [ -z "$VPC_ID" ]; then
+    echo "VPC with name $VPC_NAME and CIDR $VPC_CIDR not found in region $REGION."
+    exit 1
+fi
+
+echo "VPC $VPC_NAME found with ID $VPC_ID."
+echo "Enumerating subnets and their associated routing tables for VPC $VPC_NAME..."
+
+# List subnets and associated route tables
+SUBNETS=$(aws ec2 describe-subnets --region $REGION --filters "Name=vpc-id,Values=$VPC_ID" --query "Subnets[*].{ID:SubnetId, CIDR:CidrBlock, AZ:AvailabilityZone}" --output json)
+
+# Loop through each subnet and fetch its route table
+echo "Subnet Routing Tables:"
+echo "-----------------------"
+
+for SUBNET in $(echo "$SUBNETS" | jq -c '.[]'); do
+    SUBNET_ID=$(echo "$SUBNET" | jq -r '.ID')
+    CIDR=$(echo "$SUBNET" | jq -r '.CIDR')
+    AZ=$(echo "$SUBNET" | jq -r '.AZ')
+
+    echo "Subnet ID: $SUBNET_ID"
+    echo "CIDR Block: $CIDR"
+    echo "Availability Zone: $AZ"
+
+    # Get route table associated with the subnet
+    ROUTE_TABLES=$(aws ec2 describe-route-tables --region $REGION --filters "Name=association.subnet-id,Values=$SUBNET_ID" --query "RouteTables[*].{ID:RouteTableId, Routes:Routes}" --output json)
+
+    # Loop through each route table and print the Route Table ID and Destination only
+    for ROUTE_TABLE in $(echo "$ROUTE_TABLES" | jq -c '.[]'); do
+        ROUTE_TABLE_ID=$(echo "$ROUTE_TABLE" | jq -r '.ID')
+        echo "  Route Table ID: $ROUTE_TABLE_ID"
+
+        echo "  Routes:"
+        echo "$ROUTE_TABLE" | jq -r '.Routes[] | "    Destination: \(.DestinationCidrBlock // .DestinationPrefixListId)"'
+    done
+    echo "-----------------------"
+done

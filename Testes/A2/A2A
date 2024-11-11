@@ -1,0 +1,37 @@
+#!/bin/bash
+
+# Variables
+VPC_NAME="web-vpc"
+VPC_CIDR="10.0.16.0/20"
+REGION="us-east-1"
+EXPECTED_AZS=1
+
+# Fetch VPC ID based on Name and CIDR
+VPC_ID=$(aws ec2 describe-vpcs --region $REGION --filters "Name=tag:Name,Values=$VPC_NAME" "Name=cidr,Values=$VPC_CIDR" --query "Vpcs[0].VpcId" --output text)
+
+if [ "$VPC_ID" == "None" ] || [ -z "$VPC_ID" ]; then
+    echo "VPC with name $VPC_NAME and CIDR $VPC_CIDR not found in region $REGION."
+    exit 1
+fi
+
+echo "VPC $VPC_NAME found with ID $VPC_ID."
+
+# Verify CIDR block
+VPC_CIDR_CHECK=$(aws ec2 describe-vpcs --region $REGION --vpc-ids $VPC_ID --query "Vpcs[0].CidrBlock" --output text)
+if [ "$VPC_CIDR_CHECK" == "$VPC_CIDR" ]; then
+    echo "CIDR block matches the expected value: $VPC_CIDR"
+else
+    echo "Expected CIDR block $VPC_CIDR, but found $VPC_CIDR_CHECK."
+fi
+
+# Check the number of unique Availability Zones in the VPC
+AZ_COUNT=$(aws ec2 describe-subnets --region $REGION --filters "Name=vpc-id,Values=$VPC_ID" --query "Subnets[].AvailabilityZone" --output text | tr '\t' '\n' | sort -u | wc -l)
+
+echo "Number of Availability Zones: $AZ_COUNT"
+
+# Check Availability Zone count
+if [ "$AZ_COUNT" -eq "$EXPECTED_AZS" ]; then
+    echo "Availability Zone count matches the expected value: $EXPECTED_AZS"
+else
+    echo "Expected $EXPECTED_AZS Availability Zones, but found $AZ_COUNT."
+fi
