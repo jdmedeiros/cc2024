@@ -32,9 +32,22 @@ else
     echo "Expected $EXPECTED_AZS Availability Zones, but found $AZ_COUNT."
 fi
 
-# Count public and private subnets
-PUBLIC_SUBNET_COUNT=$(echo "$SUBNETS" | jq '[.[] | select(.MapPublicIpOnLaunch == true)] | length')
-PRIVATE_SUBNET_COUNT=$(echo "$SUBNETS" | jq '[.[] | select(.MapPublicIpOnLaunch == false)] | length')
+# Determine public and private subnets based on route tables
+PUBLIC_SUBNET_COUNT=0
+PRIVATE_SUBNET_COUNT=0
+
+for SUBNET_ID in $(echo "$SUBNETS" | jq -r '.[].SubnetId'); do
+    ROUTE_TABLE_ID=$(aws ec2 describe-route-tables --region $REGION --filters "Name=association.subnet-id,Values=$SUBNET_ID" --query "RouteTables[0].RouteTableId" --output text)
+
+    # Check if the route table has a route to an Internet Gateway (IGW)
+    IGW_ROUTE=$(aws ec2 describe-route-tables --region $REGION --route-table-ids $ROUTE_TABLE_ID --query "RouteTables[0].Routes[?GatewayId!=null].GatewayId" --output text)
+
+    if [ -n "$IGW_ROUTE" ]; then
+        PUBLIC_SUBNET_COUNT=$((PUBLIC_SUBNET_COUNT + 1))
+    else
+        PRIVATE_SUBNET_COUNT=$((PRIVATE_SUBNET_COUNT + 1))
+    fi
+done
 
 echo "Number of Public Subnets: $PUBLIC_SUBNET_COUNT"
 echo "Number of Private Subnets: $PRIVATE_SUBNET_COUNT"
