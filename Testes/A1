@@ -18,8 +18,8 @@ fi
 
 echo "VPC $VPC_NAME found with ID $VPC_ID."
 
-# Check Availability Zones
-AZ_COUNT=$(aws ec2 describe-subnets --region $REGION --filters "Name=vpc-id,Values=$VPC_ID" --query "length(unique(Subnets[].AvailabilityZone))" --output text)
+# Check Availability Zones by counting unique Availability Zones in subnets
+AZ_COUNT=$(aws ec2 describe-subnets --region $REGION --filters "Name=vpc-id,Values=$VPC_ID" --query "Subnets[].AvailabilityZone" --output text | tr '\t' '\n' | sort -u | wc -l)
 
 if [ "$AZ_COUNT" -eq "$EXPECTED_AZS" ]; then
     echo "Availability Zone count matches: $AZ_COUNT"
@@ -27,8 +27,8 @@ else
     echo "Expected $EXPECTED_AZS Availability Zones, but found $AZ_COUNT."
 fi
 
-# Check Public Subnets
-PUBLIC_SUBNET_COUNT=$(aws ec2 describe-subnets --region $REGION --filters "Name=vpc-id,Values=$VPC_ID" "Name=map-public-ip-on-launch,Values=true" --query "length(Subnets)" --output text)
+# Check Public Subnets by counting subnets with map-public-ip-on-launch enabled
+PUBLIC_SUBNET_COUNT=$(aws ec2 describe-subnets --region $REGION --filters "Name=vpc-id,Values=$VPC_ID" "Name=map-public-ip-on-launch,Values=true" --query "Subnets" --output text | wc -l)
 
 if [ "$PUBLIC_SUBNET_COUNT" -eq "$EXPECTED_PUBLIC_SUBNETS" ]; then
     echo "Public subnet count matches: $PUBLIC_SUBNET_COUNT"
@@ -36,8 +36,8 @@ else
     echo "Expected $EXPECTED_PUBLIC_SUBNETS public subnets, but found $PUBLIC_SUBNET_COUNT."
 fi
 
-# Check Private Subnets
-PRIVATE_SUBNET_COUNT=$(aws ec2 describe-subnets --region $REGION --filters "Name=vpc-id,Values=$VPC_ID" "Name=map-public-ip-on-launch,Values=false" --query "length(Subnets)" --output text)
+# Check Private Subnets by counting subnets with map-public-ip-on-launch disabled
+PRIVATE_SUBNET_COUNT=$(aws ec2 describe-subnets --region $REGION --filters "Name=vpc-id,Values=$VPC_ID" "Name=map-public-ip-on-launch,Values=false" --query "Subnets" --output text | wc -l)
 
 if [ "$PRIVATE_SUBNET_COUNT" -eq "$EXPECTED_PRIVATE_SUBNETS" ]; then
     echo "Private subnet count matches: $PRIVATE_SUBNET_COUNT"
