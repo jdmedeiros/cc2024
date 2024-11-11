@@ -4,7 +4,7 @@
 VPC_NAME="web-vpc"
 VPC_CIDR="10.0.16.0/20"
 REGION="us-east-1"
-EXPECTED_AZS=1
+EXPECTED_AZS=3
 
 # Fetch VPC ID based on Name and CIDR
 VPC_ID=$(aws ec2 describe-vpcs --region $REGION --filters "Name=tag:Name,Values=$VPC_NAME" "Name=cidr,Values=$VPC_CIDR" --query "Vpcs[0].VpcId" --output text)
