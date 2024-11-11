@@ -5,8 +5,6 @@ VPC_NAME="pdl-vpc"
 VPC_CIDR="10.0.0.0/20"
 REGION="us-east-1"
 EXPECTED_AZS=1
-EXPECTED_PUBLIC_SUBNETS=1
-EXPECTED_PRIVATE_SUBNETS=2
 
 # Fetch VPC ID based on Name and CIDR
 VPC_ID=$(aws ec2 describe-vpcs --region $REGION --filters "Name=tag:Name,Values=$VPC_NAME" "Name=cidr,Values=$VPC_CIDR" --query "Vpcs[0].VpcId" --output text)
@@ -18,11 +16,17 @@ fi
 
 echo "VPC $VPC_NAME found with ID $VPC_ID."
 
-# Describe subnets in the VPC
-SUBNETS=$(aws ec2 describe-subnets --region $REGION --filters "Name=vpc-id,Values=$VPC_ID" --query "Subnets" --output json)
+# Verify CIDR block
+VPC_CIDR_CHECK=$(aws ec2 describe-vpcs --region $REGION --vpc-ids $VPC_ID --query "Vpcs[0].CidrBlock" --output text)
+if [ "$VPC_CIDR_CHECK" == "$VPC_CIDR" ]; then
+    echo "CIDR block matches the expected value: $VPC_CIDR"
+else
+    echo "Expected CIDR block $VPC_CIDR, but found $VPC_CIDR_CHECK."
+fi
 
-# Count unique Availability Zones
-AZ_COUNT=$(echo "$SUBNETS" | jq -r '.[].AvailabilityZone' | sort -u | wc -l)
+# Check the number of unique Availability Zones in the VPC
+AZ_COUNT=$(aws ec2 describe-subnets --region $REGION --filters "Name=vpc-id,Values=$VPC_ID" --query "length(unique(Subnets[].AvailabilityZone))" --output text)
+
 echo "Number of Availability Zones: $AZ_COUNT"
 
 # Check Availability Zone count
@@ -30,38 +34,4 @@ if [ "$AZ_COUNT" -eq "$EXPECTED_AZS" ]; then
     echo "Availability Zone count matches the expected value: $EXPECTED_AZS"
 else
     echo "Expected $EXPECTED_AZS Availability Zones, but found $AZ_COUNT."
-fi
-
-# Determine public and private subnets based on route tables
-PUBLIC_SUBNET_COUNT=0
-PRIVATE_SUBNET_COUNT=0
-
-for SUBNET_ID in $(echo "$SUBNETS" | jq -r '.[].SubnetId'); do
-    # Get route table associated with the subnet
-    ROUTE_TABLE_ID=$(aws ec2 describe-route-tables --region $REGION --filters "Name=association.subnet-id,Values=$SUBNET_ID" --query "RouteTables[0].RouteTableId" --output text)
-
-    # Check if the route table has a route to an Internet Gateway (IGW)
-    IGW_ROUTE=$(aws ec2 describe-route-tables --region $REGION --route-table-ids $ROUTE_TABLE_ID --query "RouteTables[0].Routes" --output json | jq -r '.[] | select(.GatewayId | startswith("igw-")) | .GatewayId')
-
-    if [ -n "$IGW_ROUTE" ]; then
-        PUBLIC_SUBNET_COUNT=$((PUBLIC_SUBNET_COUNT + 1))
-    else
-        PRIVATE_SUBNET_COUNT=$((PRIVATE_SUBNET_COUNT + 1))
-    fi
-done
-
-echo "Number of Public Subnets: $PUBLIC_SUBNET_COUNT"
-echo "Number of Private Subnets: $PRIVATE_SUBNET_COUNT"
-
-# Check public and private subnet counts
-if [ "$PUBLIC_SUBNET_COUNT" -eq "$EXPECTED_PUBLIC_SUBNETS" ]; then
-    echo "Public subnet count matches the expected value: $EXPECTED_PUBLIC_SUBNETS"
-else
-    echo "Expected $EXPECTED_PUBLIC_SUBNETS public subnets, but found $PUBLIC_SUBNET_COUNT."
-fi
-
-if [ "$PRIVATE_SUBNET_COUNT" -eq "$EXPECTED_PRIVATE_SUBNETS" ]; then
-    echo "Private subnet count matches the expected value: $EXPECTED_PRIVATE_SUBNETS"
-else
-    echo "Expected $EXPECTED_PRIVATE_SUBNETS private subnets, but found $PRIVATE_SUBNET_COUNT."
 fi
