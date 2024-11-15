@@ -1,0 +1,40 @@
+# Define the regions
+REGIONS=("us-east-1" "us-west-2")
+
+for REGION in "${REGIONS[@]}"; do
+  echo "Processing region: $REGION"
+
+  # Step 1: Get Elastic IPs with associated instance and network interface IDs for the region
+  EIP_INFO=$(aws ec2 describe-addresses --region "$REGION" --query "Addresses[*].{PublicIp:PublicIp, InstanceId:InstanceId, NetworkInterfaceId:NetworkInterfaceId}")
+
+  # Loop through each Elastic IP entry
+  echo "$EIP_INFO" | jq -c '.[]' | while read eip; do
+    PublicIp=$(echo $eip | jq -r '.PublicIp')
+    InstanceId=$(echo $eip | jq -r '.InstanceId')
+    NetworkInterfaceId=$(echo $eip | jq -r '.NetworkInterfaceId')
+
+    echo "Elastic IP: $PublicIp"
+    echo "Associated Instance ID: $InstanceId"
+
+    if [ "$InstanceId" != "null" ]; then
+      # Retrieve the instance name using the 'Name' tag
+      InstanceName=$(aws ec2 describe-instances --region "$REGION" --instance-ids "$InstanceId" --query "Reservations[0].Instances[0].Tags[?Key=='Name'].Value" --output text)
+      echo "Instance Name: $InstanceName"
+    else
+      echo "No associated instance."
+    fi
+
+    if [ "$NetworkInterfaceId" != "null" ]; then
+      # Step 2: Get detailed information about the network interface
+      echo "Network Interface ID: $NetworkInterfaceId"
+      aws ec2 describe-network-interfaces --region "$REGION" --network-interface-ids "$NetworkInterfaceId" --query "NetworkInterfaces[*].{NetworkInterfaceId:NetworkInterfaceId, Description:Description, PrivateIpAddress:PrivateIpAddress, SubnetId:SubnetId, VpcId:VpcId, AvailabilityZone:AvailabilityZone, Status:Status}"
+    else
+      echo "No associated network interface."
+    fi
+
+    echo "-----------------------------"
+  done
+
+  # Wait for user input before moving to the next region
+  read -rsn1 -p "Ready? - press any key to continue"; echo; echo
+done
