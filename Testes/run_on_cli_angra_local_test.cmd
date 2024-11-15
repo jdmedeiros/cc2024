@@ -1,9 +1,9 @@
 @echo off
 
-set ENTA_LB_PUBLIC_ADDRESS=lb-public-74f465f7fe47cfb6.elb.us-east-1.amazonaws.com
+set /p ENTA_LB_ADDRESS=Enter the ENTA Public Load Balancer Address:
 
 REM Define URLs para testar
-set URLs="http://www.eppv.pt" "http://www.eppv.pt/info.php" "https://www.eppv.pt" "https://www.eppv.pt/info.php" "http://intranet.angra.local" "http://intranet.angra.local/info.php" "https://intranet.angra.local" "https://intranet.angra.local/info.php" "http://%ENTA_LB_PUBLIC_ADDRESS%" "http://%ENTA_LB_PUBLIC_ADDRESS%/info.php" "https://%ENTA_LB_PUBLIC_ADDRESS%" "https://%ENTA_LB_PUBLIC_ADDRESS%/info.php"
+set URLs="http://www.eppv.pt" "http://www.eppv.pt/info.php" "https://www.eppv.pt" "https://www.eppv.pt/info.php" "http://intranet.angra.local" "http://intranet.angra.local/info.php" "https://intranet.angra.local" "https://intranet.angra.local/info.php" "http://%ENTA_LB_ADDRESS%" "http://%ENTA_LB_ADDRESS%/info.php" "https://%ENTA_LB_ADDRESS%" "https://%ENTA_LB_ADDRESS%/info.php"
 
 echo Testando URLs HTTP/HTTPS...
 
