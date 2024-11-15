@@ -28,7 +28,7 @@ for url in "${URLS[@]}"; do
     else
         curl -sI $url | grep -E 'Server|X-Backend-Server|X-Served-By|X-Powered-By' || echo "No server identifier found in headers for $url"
     fi
-    read -rsn1 -p "Ready? - press any key to continue"; echo
+    read -rsn1 -p "Ready? - press any key to continue"; echo; echo
 done
 read -rsn1 -p "Ready? - press any key to continue"; echo
 
