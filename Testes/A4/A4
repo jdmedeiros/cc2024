@@ -1,0 +1,10 @@
+#!/bin/bash
+
+aws ec2 describe-vpc-peering-connections
+
+read -rsn1 -p"Ready? - press any key to continue";echo;echo
+
+aws ec2 describe-vpc-peering-connections --region us-west-2
+
+read -rsn1 -p"Ready? - press any key to continue";echo;echo
+
