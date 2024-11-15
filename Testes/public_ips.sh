@@ -1,4 +1,5 @@
-ANGRA_PUBLIC_IP="52.35.86.106"
-PDL_PUBLIC_IP="107.20.180.222"
-ENTA_LB_ADDRESS="lb-7733a33eebf981cc.elb.us-east-1.amazonaws.com"
+ANGRA_PUBLIC_IP="52.73.236.226"
+PDL_PUBLIC_IP="52.34.41.46"
+ENTA_LB_ADDRESS="lblocal-6ffff2dbeb0b78bd.elb.us-east-1.amazonaws.com"
 PDL_SSH_USERNAME="ubuntu"
+ANGRA_SSH_USERNAME="ec2-user"
