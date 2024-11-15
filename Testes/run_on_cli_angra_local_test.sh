@@ -1,5 +1,28 @@
 #!/bin/bash
 
+# Define expected hostname and script name
+EXPECTED_HOSTNAME="cli.angra.local"
+
+# Check hostname
+CURRENT_HOSTNAME=$(hostnamectl | grep "Static hostname" | awk '{print $3}')
+
+if [ "$CURRENT_HOSTNAME" != "$EXPECTED_HOSTNAME" ]; then
+    echo "This is not the expected host ($EXPECTED_HOSTNAME). Exiting..."
+    exit 1
+fi
+
+echo "Confirmed: Hostname is $EXPECTED_HOSTNAME"; echo
+
+# Check if script is running
+if pgrep -f "$SCRIPT_NAME" > /dev/null; then
+    echo "Script $SCRIPT_NAME is running."
+else
+    echo "Script $SCRIPT_NAME is NOT running."
+    exit 1
+fi
+
+
+
 # Source the public IPs and other configuration variables
 source ./public_ips.sh
 

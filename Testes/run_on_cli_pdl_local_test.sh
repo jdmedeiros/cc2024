@@ -1,5 +1,19 @@
 #!/bin/bash
 
+# Define expected hostname and script name
+EXPECTED_HOSTNAME="cli.pdl.local"
+
+# Check hostname
+CURRENT_HOSTNAME=$(hostnamectl | grep "Static hostname" | awk '{print $3}')
+
+if [ "$CURRENT_HOSTNAME" != "$EXPECTED_HOSTNAME" ]; then
+    echo "This is not the expected host ($EXPECTED_HOSTNAME). Exiting..."
+    exit 1
+fi
+
+echo "Confirmed: Hostname is $EXPECTED_HOSTNAME"; echo
+
+
 # Source the public IPs and other configuration variables
 source ./public_ips.sh
 
