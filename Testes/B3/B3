@@ -1,7 +1,5 @@
 #!/bin/bash
 
-read -rsn1 -p"Ready? - press any key to continue";echo;echo
-
 aws ec2 describe-security-groups --region us-east-1 --query "SecurityGroups[*].{GroupId:GroupId, GroupName:GroupName, IngressRules:IpPermissions}"
 
 read -rsn1 -p"Ready? - press any key to continue";echo;echo
