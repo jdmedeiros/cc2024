@@ -8,3 +8,8 @@ aws ec2 describe-vpc-peering-connections --region us-west-2
 
 read -rsn1 -p"Ready? - press any key to continue";echo;echo
 
+../A1/A1C
+
+read -rsn1 -p"Ready? - press any key to continue";echo;echo
+
+../A3/A3C
